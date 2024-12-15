@@ -16,17 +16,19 @@ def get_problem(filename: str) -> str:
     else:
         return filename[:-ext_len]
 
-def get_test_cases_cph(problem: str) -> list[tuple[str, str]]:
+def get_test_cases_cph(problem: str , testcases = []) -> list[tuple[str, str]]:
     dirname = os.path.dirname(__file__)
     working_dir = dirname[:-(len("test"))] if dirname[-(len("test")):] == "test" else dirname
     cph_path = os.path.join(working_dir,".cph")
+    if not os.path.exists(cph_path):
+        return testcases
+
     cph_file = None
     files = os.listdir(cph_path)
     for file in files:
         if file.startswith(f".{problem}"):
             cph_file = os.path.join(cph_path,file)
             break
-    testcases = []
     if cph_file is not None:
         with open(cph_file, 'r') as f:
             cph = json.load(f)

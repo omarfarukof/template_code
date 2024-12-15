@@ -22,7 +22,7 @@ def print_run_problem(input: str  , build_problem=f"{build_problem}")->None:
 
 ## [ Pytest ] ==================================
 @pytest.mark.parametrize("test_in , test_out" , testcases)
-def test_code(test_in , test_out):
+def test_cph_cases(test_in , test_out):
     assert run_problem(test_in) == test_in
 
 
@@ -30,16 +30,22 @@ my_testcases = [
     # ("Test_in_01" , "Test_out_01" ),
     # ("Test_in_02" , "Test_out_02" )
 ]
-
 @pytest.mark.parametrize("my_test_in , my_test_out" , my_testcases)
 def test_my_cases(my_test_in, my_test_out):
     assert run_problem(my_test_in) == my_test_out
 
 # Can Generate Test Cases with brute force
-def test_gen():
-    assert True
+def gen_cases(n_cases:int=5 , gen_testcases:list[tuple[str, str]]=[]) -> list[tuple[str, str]]:
+    # TODO: Generate test cases with brute force        
+    # 
+    # 
+    return gen_testcases
 
-
+@pytest.mark.parametrize("gen_test_in , gen_test_out" , gen_cases())
+def test_gen_cases(gen_test_in , gen_test_out):
+    assert run_problem(gen_test_in) == gen_test_out
+    
+    
 ## [ Main ] (run from Script) ==================
 if __name__ == "__main__":
     pycpptest.compile(problem , build_dir)
