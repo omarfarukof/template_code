@@ -16,7 +16,7 @@ testcases = pycpptest.get_test_cases_cph(problem)
 
 def run_problem(input: str  , build_problem=f"{build_problem}")->str:
     return subprocess.check_output([f"./{build_problem}"], input=input.encode('utf-8')).decode('utf-8')
-def print_run_problem(input: str  , build_problem=f"{build_problem}")->str:
+def print_run_problem(input: str  , build_problem=f"{build_problem}")->None:
     print(run_problem(input , build_problem))
 
 
