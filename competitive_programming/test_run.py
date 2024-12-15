@@ -25,9 +25,19 @@ def print_run_problem(input: str  , build_problem=f"{build_problem}")->None:
 def test_code(test_in , test_out):
     assert run_problem(test_in) == test_in
 
+
+my_testcases = [
+    # ("Test_in_01" , "Test_out_01" ),
+    # ("Test_in_02" , "Test_out_02" )
+]
+
+@pytest.mark.parametrize("my_test_in , my_test_out" , my_testcases)
+def test_my_cases(my_test_in, my_test_out):
+    assert run_problem(my_test_in) == my_test_out
+
+# Can Generate Test Cases with brute force
 def test_gen():
     assert True
-
 
 
 ## [ Main ] (run from Script) ==================
