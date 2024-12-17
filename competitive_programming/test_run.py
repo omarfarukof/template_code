@@ -1,38 +1,32 @@
 #!/usr/bin/env -S uv run
-import pytest # noqa: F401
-import subprocess
 import os
-import pycpptest
+import pycpptest as pct
 
 # Get the name of the Python file
 build_dir = "build"
 filename = os.path.basename(__file__)
 dirname = os.path.dirname(__file__)
-problem : str = pycpptest.get_problem(filename)
+problem : str = pct.get_problem(filename)
 build_problem : str = os.path.join(build_dir,problem)
 
 # Extract test cases from cph file
-testcases = pycpptest.get_test_cases_cph(problem)
-
-def run_problem(input: str  , build_problem=f"{build_problem}")->str:
-    return subprocess.check_output([f"./{build_problem}"], input=input.encode('utf-8')).decode('utf-8')
-def print_run_problem(input: str  , build_problem=f"{build_problem}")->None:
-    print(run_problem(input , build_problem))
-
-
-## [ Pytest ] ==================================
-@pytest.mark.parametrize("test_in , test_out" , testcases)
-def test_cph_cases(test_in , test_out):
-    assert run_problem(test_in) == test_in
-
+cph_testcases = pct.get_test_cases_cph(problem)
 
 my_testcases = [
     # ("Test_in_01" , "Test_out_01" ),
     # ("Test_in_02" , "Test_out_02" )
 ]
-@pytest.mark.parametrize("my_test_in , my_test_out" , my_testcases)
-def test_my_cases(my_test_in, my_test_out):
-    assert run_problem(my_test_in) == my_test_out
+
+gen_testcases = []
+
+def verify_output(input , run_output, expected_output, match_char=True)->bool:
+    if match_char:
+        return run_output == expected_output
+    else:
+        # TODO: Write Verification Logic
+        # 
+        #         
+        return False
 
 # Can Generate Test Cases with brute force
 def gen_cases(n_cases:int=5 , gen_testcases:list[tuple[str, str]]=[]) -> list[tuple[str, str]]:
@@ -41,13 +35,37 @@ def gen_cases(n_cases:int=5 , gen_testcases:list[tuple[str, str]]=[]) -> list[tu
     # 
     return gen_testcases
 
-@pytest.mark.parametrize("gen_test_in , gen_test_out" , gen_cases())
-def test_gen_cases(gen_test_in , gen_test_out):
-    assert run_problem(gen_test_in) == gen_test_out
-    
+
+
+## [ PyCpptest ] ==================================
+
+def test_cases(test_in , test_out , build_problem , Test_Case_No=1, No_Cases=1)->bool:
+    input = test_in
+    run_output = pct.run_problem(input, build_problem)
+    expected_output = test_out
+    if verify_output(input, run_output, expected_output):
+        pct.g_print(f"Passed CPH Test Case {Test_Case_No} of {No_Cases}")
+        return True
+    else:
+        pct.output_failure_result(input , run_output , expected_output, Test_Case_No, No_Cases)
+        return False
+
     
 ## [ Main ] (run from Script) ==================
 if __name__ == "__main__":
-    pycpptest.compile(problem , build_dir)
+    pct.center_print(" PyCpptest Start " , char="=")
+    pct.compile(problem , build_dir)
     filepath = os.path.join(dirname,filename)
-    os.system(f"pytest -vv {filepath}")
+
+    # CPH_TestCases
+    pct.test_code(cph_testcases , build_problem , verify_output , Test_Name="CPH")
+
+    # My_TestCases
+    pct.test_code(my_testcases , build_problem , verify_output , Test_Name="MY")
+
+    # Gen_TestCases
+    gen_testcases = gen_cases(gen_testcases=[])
+    pct.test_code(gen_testcases , build_problem , verify_output , Test_Name="GEN")
+
+    if pct.DEBUG:
+        pct.test_code(pct.DEBUG_testcases , build_problem , verify_output, benchmark=True , Test_Name="DEBUG")
