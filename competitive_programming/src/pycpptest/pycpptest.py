@@ -153,11 +153,8 @@ def run_problem(input: str  , build_problem , benchmark=False , c_print=False)->
         # f_run.write(" ".join(rm_in_out_cmd))
         f_run.close()
     
-    benchmark_result = subprocess.check_output(["bash" , "tmp_run.sh"])
-    with open("benchmark_result.json" , "w") as f_bench:
-        f_bench.write(benchmark_result.decode('utf-8'))
-        f_bench.close()
-    # b_print(f"\nReturn Code: {process.returncode}")
+    subprocess.check_output(["bash" , "tmp_run.sh"])
+    
     with open("tmp_output.txt" , "r") as f_out:
         output = f_out.read()
         f_out.close()
@@ -235,3 +232,156 @@ def test_code(testcases , build_problem , verify_output, benchmark=False , Test_
         center_print(f"[ Test {Test_Name} Failed ]", prt=r_print)
     else:
         center_print(f"[ Test {Test_Name} Passed ]", prt=g_print)
+
+
+test_run_py="""
+#!/usr/bin/env -S uv run
+import os
+import pycpptest as pct
+
+# Get the name of the Python file
+build_dir = "build"
+filename = os.path.basename(__file__)
+dirname = os.path.dirname(__file__)
+problem : str = pct.get_problem(filename)
+build_problem : str = os.path.join(build_dir,problem)
+
+# Extract test cases from cph file
+cph_testcases = pct.get_test_cases_cph(problem)
+
+my_testcases = [
+    # ("Test_in_01" , "Test_out_01" ),
+    # ("Test_in_02" , "Test_out_02" )
+]
+
+gen_testcases = []
+
+def verify_output(input , run_output, expected_output, match_char=True)->bool:
+    if match_char:
+        return run_output == expected_output
+    else:
+        # TODO: Write Verification Logic
+        # 
+        #         
+        return False
+
+# Can Generate Test Cases with brute force
+def gen_cases(n_cases:int=5 , gen_testcases:list[tuple[str, str]]=[]) -> list[tuple[str, str]]:
+    # TODO: Generate test cases with brute force        
+    # 
+    # 
+    return gen_testcases
+
+
+
+## [ PyCpptest ] ==================================
+
+def test_cases(test_in , test_out , build_problem , Test_Case_No=1, No_Cases=1)->bool:
+    input = test_in
+    run_output = pct.run_problem(input, build_problem)
+    expected_output = test_out
+    if verify_output(input, run_output, expected_output):
+        pct.g_print(f"Passed CPH Test Case {Test_Case_No} of {No_Cases}")
+        return True
+    else:
+        pct.output_failure_result(input , run_output , expected_output, Test_Case_No, No_Cases)
+        return False
+
+    
+## [ Main ] (run from Script) ==================
+if __name__ == "__main__":
+    pct.center_print(" PyCpptest Start " , char="=")
+    pct.compile(problem , build_dir)
+    filepath = os.path.join(dirname,filename)
+
+    # CPH_TestCases
+    pct.test_code(cph_testcases , build_problem , verify_output , Test_Name="CPH")
+
+    # My_TestCases
+    pct.test_code(my_testcases , build_problem , verify_output , Test_Name="MY")
+
+    # Gen_TestCases
+    gen_testcases = gen_cases(gen_testcases=[])
+    pct.test_code(gen_testcases , build_problem , verify_output , Test_Name="GEN")
+
+    if pct.DEBUG:
+        pct.test_code(pct.DEBUG_testcases , build_problem , verify_output, benchmark=True , Test_Name="DEBUG")
+
+"""
+
+create_test_py="""
+#!/usr/bin/env -S uv run
+
+import sys
+import pycpptest as pct
+
+if len(sys.argv) == 2:
+    pct.CreateTestPy(sys.argv[1] )
+elif len(sys.argv) == 3:
+    pct.CreateTestPy(sys.argv[1] , test_path=sys.argv[2])
+else:
+    print("Error: Invalid number of arguments")
+    sys.exit(1)
+
+"""
+
+run_cpp_test="""
+#!/usr/bin/env -S uv run
+import sys
+import pycpptest as pct
+
+if len(sys.argv) == 2:
+    pct.RunCppTest(sys.argv[1] )
+elif len(sys.argv) == 3:
+    pct.RunCppTest(sys.argv[1] , test_path=sys.argv[2])
+else:
+    print("Error: Invalid number of arguments")
+    sys.exit(1)
+
+"""
+
+code_extentions = (
+    ".cpp",
+    ".c",
+    ".cc",
+    ".c++",
+    ".cxx",
+    ".h",
+    ".hpp",
+    ".hxx",
+    ".h++",
+    ".py",
+    ".java"
+)
+
+def remove_extension(filename: str) -> str:
+    for ext in code_extentions:
+        if filename.endswith(ext):
+            return filename[:-len(ext)]
+    return filename
+
+def CreateTestPy(program_name, test_path="test" , test_run_py=test_run_py):
+    program_name = remove_extension(program_name)
+    os.makedirs(test_path, exist_ok=True)
+    with open(os.path.join(test_path,f"test_{program_name}.py"), 'w') as f:
+        f.write(test_run_py)
+        f.close()
+
+
+def RunCppTest(program_name, test_path="test"):
+    program_name = remove_extension(program_name)
+    script = os.path.join(test_path,f"test_{program_name}.py")
+    subprocess.run(["uv", "run", script])
+
+def pycpptest_init():
+    with open("CreateTestPy.py", 'w') as f:
+        f.write(create_test_py)
+        f.close()
+
+    with open("RunCppTest.py", 'w') as f:
+        f.write(run_cpp_test)
+        f.close()
+
+
+if __name__ == "__main__":
+    pycpptest_init()
