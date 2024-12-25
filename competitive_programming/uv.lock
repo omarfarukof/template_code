@@ -1,7 +1,0 @@
-version = 1
-requires-python = ">=3.12"
-
-[[package]]
-name = "pycpptest"
-version = "0.2.0"
-source = { editable = "." }
